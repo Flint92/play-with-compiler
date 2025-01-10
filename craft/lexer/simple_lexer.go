@@ -244,7 +244,5 @@ func (l *Lexer) run() {
 		}
 	}
 
-	if len(textBuf) > 0 {
-		flushToken()
-	}
+	flushToken()
 }
