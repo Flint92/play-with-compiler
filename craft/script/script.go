@@ -34,11 +34,12 @@ func (s *Script) Run(in io.Reader, out io.Writer) {
 			break
 		}
 
-		scriptText = line + "\n"
+		scriptText += line + "\n"
 		if strings.HasSuffix(line, ";") {
 			err, node := Parse(scriptText)
 			if err != nil {
 				_, _ = fmt.Fprintf(out, "%s\n>>", err.Error())
+				scriptText = ""
 				continue
 			}
 
@@ -47,8 +48,8 @@ func (s *Script) Run(in io.Reader, out io.Writer) {
 				_, _ = fmt.Fprintf(out, "%s\n>>", err.Error())
 			} else {
 				_, _ = fmt.Fprintf(out, "%d\n>>", result)
-				scriptText = ""
 			}
+			scriptText = ""
 		}
 
 	}
