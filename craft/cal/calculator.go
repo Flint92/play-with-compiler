@@ -30,7 +30,7 @@ func Eval(script string) (error, int64) {
 	return eval(root, "")
 }
 
-func (cal *SimpleCalculator) parse() (error, *simpleNode) {
+func (cal *SimpleCalculator) parse() (error, ast.Node) {
 	err, child := additive(cal.reader)
 	if err != nil {
 		return err, nil
