@@ -12,4 +12,5 @@ type TokenReader interface {
 	Peek() Token
 	Unread()
 	Position() int
+	SetPosition(int)
 }

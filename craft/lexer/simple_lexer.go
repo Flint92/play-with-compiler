@@ -82,6 +82,12 @@ func (l *Lexer) Position() int {
 	return l.pos
 }
 
+func (l *Lexer) SetPosition(pos int) {
+	if pos > 0 && pos < len(l.tokens) {
+		l.pos = pos
+	}
+}
+
 func (l *Lexer) Dump() {
 	fmt.Printf("%-20s\t%-20s\n", "kind", "text")
 	for _, token := range l.tokens {
