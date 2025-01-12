@@ -75,9 +75,9 @@ func GetTokenKindString(kind TokenKind) string {
 	case Identifier:
 		return "Identifier"
 	case IntLiteral:
-		return "Literal(int)"
+		return "IntLiteral"
 	case StringLiteral:
-		return "Literal(string)"
+		return "StringLiteral"
 	case Eof:
 		return "EOF"
 	default:
