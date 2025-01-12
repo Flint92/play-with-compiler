@@ -191,7 +191,7 @@ func primary(reader tokens.TokenReader) (error, *simpleNode) {
 		}
 
 		token = reader.Peek()
-		if token == tokens.EOF || token.Kind != tokens.CloseParen {
+		if token.Kind != tokens.CloseParen {
 			return fmt.Errorf("expecting close parenthesis"), nil
 		}
 
