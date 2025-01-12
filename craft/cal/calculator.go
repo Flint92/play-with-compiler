@@ -119,21 +119,27 @@ func additive(reader tokens.TokenReader) (error, *simpleNode) {
 
 	node := child1
 	if child1 != nil {
-		token := reader.Peek()
-		if token.Kind == tokens.Plus || token.Kind == tokens.Minus {
-			reader.Read()
-			err, child2 := additive(reader)
-			if err != nil {
-				return err, nil
-			}
+		for {
+			token := reader.Peek()
+			if token.Kind == tokens.Plus || token.Kind == tokens.Minus {
+				reader.Read()
+				err, child2 := multiplicative(reader)
+				if err != nil {
+					return err, nil
+				}
 
-			if child2 == nil {
-				return fmt.Errorf("expect an multiplicative after an operator"), nil
-			}
+				if child2 == nil {
+					return fmt.Errorf("expect an multiplicative after an operator"), nil
+				}
 
-			node = newSimpleNode(ast.Additive, token.Text)
-			node.addChild(child1)
-			node.addChild(child2)
+				node = newSimpleNode(ast.Additive, token.Text)
+				node.addChild(child1)
+				node.addChild(child2)
+
+				child1 = node
+			} else {
+				break
+			}
 		}
 	}
 
@@ -148,21 +154,27 @@ func multiplicative(reader tokens.TokenReader) (error, *simpleNode) {
 
 	node := child1
 	if child1 != nil {
-		token := reader.Peek()
-		if token.Kind == tokens.Star || token.Kind == tokens.Slash || token.Kind == tokens.Percent {
-			reader.Read()
-			err, child2 := multiplicative(reader)
-			if err != nil {
-				return err, nil
-			}
+		for {
+			token := reader.Peek()
+			if token.Kind == tokens.Star || token.Kind == tokens.Slash || token.Kind == tokens.Percent {
+				reader.Read()
+				err, child2 := primary(reader)
+				if err != nil {
+					return err, nil
+				}
 
-			if child2 == nil {
-				return fmt.Errorf("expect an primary after an operator"), nil
-			}
+				if child2 == nil {
+					return fmt.Errorf("expect an primary after an operator"), nil
+				}
 
-			node = newSimpleNode(ast.Multiplicative, token.Text)
-			node.addChild(child1)
-			node.addChild(child2)
+				node = newSimpleNode(ast.Multiplicative, token.Text)
+				node.addChild(child1)
+				node.addChild(child2)
+
+				child1 = node
+			} else {
+				break
+			}
 		}
 	}
 
