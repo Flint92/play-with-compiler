@@ -7,27 +7,12 @@ import "github.com/antlr4-go/antlr/v4"
 type PlayScriptVisitor interface {
 	antlr.ParseTreeVisitor
 
-	// Visit a parse tree produced by PlayScriptParser#bracedExpression.
-	VisitBracedExpression(ctx *BracedExpressionContext) interface{}
-
 	// Visit a parse tree produced by PlayScriptParser#expression.
 	VisitExpression(ctx *ExpressionContext) interface{}
 
 	// Visit a parse tree produced by PlayScriptParser#primary.
 	VisitPrimary(ctx *PrimaryContext) interface{}
 
-	// Visit a parse tree produced by PlayScriptParser#expressionList.
-	VisitExpressionList(ctx *ExpressionListContext) interface{}
-
-	// Visit a parse tree produced by PlayScriptParser#functionCall.
-	VisitFunctionCall(ctx *FunctionCallContext) interface{}
-
-	// Visit a parse tree produced by PlayScriptParser#literal.
-	VisitLiteral(ctx *LiteralContext) interface{}
-
 	// Visit a parse tree produced by PlayScriptParser#integerLiteral.
 	VisitIntegerLiteral(ctx *IntegerLiteralContext) interface{}
-
-	// Visit a parse tree produced by PlayScriptParser#floatLiteral.
-	VisitFloatLiteral(ctx *FloatLiteralContext) interface{}
 }

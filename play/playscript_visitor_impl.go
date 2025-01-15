@@ -18,6 +18,10 @@ func (s *ScriptVisitorImpl) Visit(tree antlr.ParseTree) interface{} {
 	switch t := tree.(type) {
 	case *ExpressionContext:
 		return s.VisitExpression(t)
+	case *PrimaryContext:
+		return s.VisitPrimary(t)
+	case *IntegerLiteralContext:
+		return s.VisitIntegerLiteral(t)
 	case antlr.RuleNode:
 		return s.VisitChildren(t)
 	default:
@@ -39,37 +43,17 @@ func (s *ScriptVisitorImpl) VisitErrorNode(node antlr.ErrorNode) interface{} {
 	panic(node.GetPayload())
 }
 
-func (s *ScriptVisitorImpl) VisitLiteral(ctx *LiteralContext) interface{} {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (s *ScriptVisitorImpl) VisitIntegerLiteral(ctx *IntegerLiteralContext) interface{} {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s *ScriptVisitorImpl) VisitFloatLiteral(ctx *FloatLiteralContext) interface{} {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s *ScriptVisitorImpl) VisitExpressionList(ctx *ExpressionListContext) interface{} {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s *ScriptVisitorImpl) VisitFunctionCall(ctx *FunctionCallContext) interface{} {
-	//TODO implement me
-	panic("implement me")
+	value, _ := strconv.ParseInt(ctx.GetText(), 10, 64)
+	return value
 }
 
 func (s *ScriptVisitorImpl) VisitExpression(ctx *ExpressionContext) interface{} {
-	if ctx.GetChildCount() == 1 {
-		// Single number
-		value, _ := strconv.ParseInt(ctx.GetText(), 10, 64)
-		return value
-	} else if ctx.GetChildCount() == 3 {
+	if ctx.Primary() != nil {
+		return s.Visit(ctx.Primary())
+	}
+
+	if ctx.GetChildCount() == 3 {
 		// Binary operation
 		left := s.Visit(ctx.GetChild(0).(antlr.ParseTree)).(int64)
 		right := s.Visit(ctx.GetChild(2).(antlr.ParseTree)).(int64)
@@ -92,6 +76,9 @@ func (s *ScriptVisitorImpl) VisitExpression(ctx *ExpressionContext) interface{} 
 }
 
 func (s *ScriptVisitorImpl) VisitPrimary(ctx *PrimaryContext) interface{} {
-	//TODO implement me
-	panic("implement me")
+	if ctx.IntegerLiteral() != nil {
+		return s.Visit(ctx.IntegerLiteral())
+	} else {
+		return s.Visit(ctx.Expression())
+	}
 }
