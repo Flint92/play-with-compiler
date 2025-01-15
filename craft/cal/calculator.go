@@ -14,16 +14,16 @@ type SimpleCalculator struct {
 	root   *ast.Node
 }
 
-func Eval(script string) (error, int64) {
+func Eval(script string) (int64, error) {
 	reader := lexer.Parse(script)
 
 	cal := &SimpleCalculator{
 		reader: reader,
 	}
 
-	err, root := cal.parse()
+	root, err := cal.parse()
 	if err != nil {
-		return err, 0
+		return 0, err
 	}
 
 	cal.root = root
@@ -31,20 +31,20 @@ func Eval(script string) (error, int64) {
 	return eval(root, "")
 }
 
-func (cal *SimpleCalculator) parse() (error, *ast.Node) {
-	err, child := evl.Additive(cal.reader)
+func (cal *SimpleCalculator) parse() (*ast.Node, error) {
+	child, err := evl.Additive(cal.reader)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	root := ast.NewNode(ast.Program, "Calculator")
 	if child != nil {
 		root.AddChild(child)
 	}
-	return nil, root
+	return root, nil
 }
 
-func eval(node *ast.Node, indent string) (error, int64) {
+func eval(node *ast.Node, indent string) (int64, error) {
 	result := int64(0)
 
 	fmt.Printf("%s Calculating: %s\n", indent, ast.GetNodeTypeString(node.Type()))
@@ -52,24 +52,24 @@ func eval(node *ast.Node, indent string) (error, int64) {
 	switch node.Type() {
 	case ast.Program:
 		for _, child := range node.Children() {
-			err, ro := eval(child, indent+"\t")
+			ro, err := eval(child, indent+"\t")
 			if err != nil {
-				return err, 0
+				return 0, err
 			} else {
 				result = ro
 			}
 		}
 	case ast.Additive:
 		child1 := node.Children()[0]
-		err, val1 := eval(child1, indent+"\t")
+		val1, err := eval(child1, indent+"\t")
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 
 		child2 := node.Children()[1]
-		err, val2 := eval(child2, indent+"\t")
+		val2, err := eval(child2, indent+"\t")
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 
 		if "+" == node.Text() {
@@ -79,15 +79,15 @@ func eval(node *ast.Node, indent string) (error, int64) {
 		}
 	case ast.Multiplicative:
 		child1 := node.Children()[0]
-		err, val1 := eval(child1, indent+"\t")
+		val1, err := eval(child1, indent+"\t")
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 
 		child2 := node.Children()[1]
-		err, val2 := eval(child2, indent+"\t")
+		val2, err := eval(child2, indent+"\t")
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 
 		if "*" == node.Text() {
@@ -100,14 +100,14 @@ func eval(node *ast.Node, indent string) (error, int64) {
 	case ast.IntLiteral:
 		i, err := strconv.ParseInt(node.Text(), 10, 64)
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 		result = i
 	default:
-		return fmt.Errorf("unexpected node type: %s\n", ast.GetNodeTypeString(node.Type())), 0
+		return 0, fmt.Errorf("unexpected node type: %s\n", ast.GetNodeTypeString(node.Type()))
 	}
 
 	fmt.Printf("%sResult: %d\n", indent, result)
 
-	return nil, result
+	return result, nil
 }

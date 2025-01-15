@@ -6,10 +6,10 @@ import (
 	"github.com/flint92/play-with-compiler/craft/tokens"
 )
 
-func Additive(reader tokens.TokenReader) (error, *ast.Node) {
-	err, child1 := Multiplicative(reader)
+func Additive(reader tokens.TokenReader) (*ast.Node, error) {
+	child1, err := Multiplicative(reader)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	node := child1
@@ -18,13 +18,13 @@ func Additive(reader tokens.TokenReader) (error, *ast.Node) {
 			token := reader.Peek()
 			if token.Kind == tokens.Plus || token.Kind == tokens.Minus {
 				reader.Read()
-				err, child2 := Multiplicative(reader)
+				child2, err := Multiplicative(reader)
 				if err != nil {
-					return err, nil
+					return nil, err
 				}
 
 				if child2 == nil {
-					return fmt.Errorf("expect an multiplicative after an operator"), nil
+					return nil, fmt.Errorf("expect an multiplicative after an operator")
 				}
 
 				node = ast.NewNode(ast.Additive, token.Text)
@@ -38,13 +38,13 @@ func Additive(reader tokens.TokenReader) (error, *ast.Node) {
 		}
 	}
 
-	return nil, node
+	return node, nil
 }
 
-func Multiplicative(reader tokens.TokenReader) (error, *ast.Node) {
-	err, child1 := Primary(reader)
+func Multiplicative(reader tokens.TokenReader) (*ast.Node, error) {
+	child1, err := Primary(reader)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	node := child1
@@ -53,13 +53,13 @@ func Multiplicative(reader tokens.TokenReader) (error, *ast.Node) {
 			token := reader.Peek()
 			if token.Kind == tokens.Star || token.Kind == tokens.Slash || token.Kind == tokens.Percent {
 				reader.Read()
-				err, child2 := Primary(reader)
+				child2, err := Primary(reader)
 				if err != nil {
-					return err, nil
+					return nil, err
 				}
 
 				if child2 == nil {
-					return fmt.Errorf("expect an primary after an operator"), nil
+					return nil, fmt.Errorf("expect an primary after an operator")
 				}
 
 				node = ast.NewNode(ast.Multiplicative, token.Text)
@@ -73,39 +73,39 @@ func Multiplicative(reader tokens.TokenReader) (error, *ast.Node) {
 		}
 	}
 
-	return nil, node
+	return node, nil
 }
 
-func Primary(reader tokens.TokenReader) (error, *ast.Node) {
+func Primary(reader tokens.TokenReader) (*ast.Node, error) {
 	token := reader.Peek()
 
 	switch token.Kind {
 	case tokens.IntLiteral:
 		reader.Read()
-		return nil, ast.NewNode(ast.IntLiteral, token.Text)
+		return ast.NewNode(ast.IntLiteral, token.Text), nil
 	case tokens.Identifier:
 		reader.Read()
-		return nil, ast.NewNode(ast.Identifier, token.Text)
+		return ast.NewNode(ast.Identifier, token.Text), nil
 	case tokens.OpenParen:
 		reader.Read()
-		err, node := Additive(reader)
+		node, err := Additive(reader)
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 
 		if node == nil {
-			return fmt.Errorf("expect an additive expression inside parenthesis"), nil
+			return nil, fmt.Errorf("expect an additive expression inside parenthesis")
 		}
 
 		token = reader.Peek()
 		if token.Kind != tokens.CloseParen {
-			return fmt.Errorf("expecting close parenthesis"), nil
+			return nil, fmt.Errorf("expecting close parenthesis")
 		}
 
 		reader.Read()
 
-		return nil, node
+		return node, nil
 	default:
-		return fmt.Errorf("unexpected token kind %s\n", tokens.GetTokenKindString(token.Kind)), nil
+		return nil, fmt.Errorf("unexpected token kind %s\n", tokens.GetTokenKindString(token.Kind))
 	}
 }

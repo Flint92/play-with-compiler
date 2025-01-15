@@ -36,14 +36,14 @@ func (s *Script) Run(in io.Reader, out io.Writer) {
 
 		scriptText += line + "\n"
 		if strings.HasSuffix(line, ";") {
-			err, node := Parse(scriptText)
+			node, err := Parse(scriptText)
 			if err != nil {
 				_, _ = fmt.Fprintf(out, "%s\n>>", err.Error())
 				scriptText = ""
 				continue
 			}
 
-			err, result := s.eval(node, "")
+			result, err := s.eval(node, "")
 			if err != nil {
 				_, _ = fmt.Fprintf(out, "%s\n>>", err.Error())
 			} else {
@@ -55,30 +55,30 @@ func (s *Script) Run(in io.Reader, out io.Writer) {
 	}
 }
 
-func (s *Script) eval(node *ast.Node, indent string) (error, int64) {
+func (s *Script) eval(node *ast.Node, indent string) (int64, error) {
 	result := int64(0)
 
 	switch node.Type() {
 	case ast.Program:
 		for _, child := range node.Children() {
-			err, ro := s.eval(child, indent+"\t")
+			ro, err := s.eval(child, indent+"\t")
 			if err != nil {
-				return err, 0
+				return 0, err
 			} else {
 				result = ro
 			}
 		}
 	case ast.Additive:
 		child1 := node.Children()[0]
-		err, val1 := s.eval(child1, indent+"\t")
+		val1, err := s.eval(child1, indent+"\t")
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 
 		child2 := node.Children()[1]
-		err, val2 := s.eval(child2, indent+"\t")
+		val2, err := s.eval(child2, indent+"\t")
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 
 		if "+" == node.Text() {
@@ -88,15 +88,15 @@ func (s *Script) eval(node *ast.Node, indent string) (error, int64) {
 		}
 	case ast.Multiplicative:
 		child1 := node.Children()[0]
-		err, val1 := s.eval(child1, indent+"\t")
+		val1, err := s.eval(child1, indent+"\t")
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 
 		child2 := node.Children()[1]
-		err, val2 := s.eval(child2, indent+"\t")
+		val2, err := s.eval(child2, indent+"\t")
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 
 		if "*" == node.Text() {
@@ -109,25 +109,25 @@ func (s *Script) eval(node *ast.Node, indent string) (error, int64) {
 	case ast.IntLiteral:
 		i, err := strconv.ParseInt(node.Text(), 10, 64)
 		if err != nil {
-			return err, 0
+			return 0, err
 		}
 		result = i
 	case ast.Identifier:
 		v, ok := s.variables[node.Text()]
 		if !ok {
-			return fmt.Errorf("unknown variable: %s", node.Text()), 0
+			return 0, fmt.Errorf("unknown variable: %s", node.Text())
 		}
 		result = v
 	case ast.AssignmentStmt:
 		_, ok := s.variables[node.Text()]
 		if !ok {
-			return fmt.Errorf("unknown variable: %s", node.Text()), 0
+			return 0, fmt.Errorf("unknown variable: %s", node.Text())
 		}
 		if len(node.Children()) > 0 {
 			child := node.Children()[0]
-			err, val := s.eval(child, indent+"\t")
+			val, err := s.eval(child, indent+"\t")
 			if err != nil {
-				return err, 0
+				return 0, err
 			}
 			s.variables[node.Text()] = val
 			result = val
@@ -135,16 +135,16 @@ func (s *Script) eval(node *ast.Node, indent string) (error, int64) {
 	case ast.IntDeclaration:
 		if len(node.Children()) > 0 {
 			child := node.Children()[0]
-			err, val := s.eval(child, indent+"\t")
+			val, err := s.eval(child, indent+"\t")
 			if err != nil {
-				return err, 0
+				return 0, err
 			}
 			s.variables[node.Text()] = val
 			result = val
 		}
 	default:
-		return fmt.Errorf("unexpected node type: %s\n", ast.GetNodeTypeString(node.Type())), 0
+		return 0, fmt.Errorf("unexpected node type: %s\n", ast.GetNodeTypeString(node.Type()))
 	}
 
-	return nil, result
+	return result, nil
 }

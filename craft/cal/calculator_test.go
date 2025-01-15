@@ -16,13 +16,13 @@ func TestEval(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		_, got := Eval(tt.script)
+		got, _ := Eval(tt.script)
 		if got != tt.want {
 			t.Errorf("Eval(%s) got = %d, want %d", tt.script, got, tt.want)
 		}
 	}
 
-	err, _ := Eval("1+")
+	_, err := Eval("1+")
 	if err == nil {
 		t.Errorf("Eval(1+) got = nil, want error")
 	}

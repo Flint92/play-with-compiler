@@ -8,45 +8,45 @@ import (
 	"github.com/flint92/play-with-compiler/craft/tokens"
 )
 
-func Parse(script string) (error, *ast.Node) {
+func Parse(script string) (*ast.Node, error) {
 	reader := lexer.Parse(script)
 	return prog(reader)
 }
 
-func prog(reader *lexer.Lexer) (error, *ast.Node) {
+func prog(reader *lexer.Lexer) (*ast.Node, error) {
 	node := ast.NewNode(ast.Program, "pwd")
 
 	for reader.Peek() != tokens.EOF {
-		err, child := intDeclare(reader)
+		child, err := intDeclare(reader)
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 
 		if child == nil {
-			err, child = expressionStmt(reader)
+			child, err = expressionStmt(reader)
 			if err != nil {
-				return err, nil
+				return nil, err
 			}
 		}
 
 		if child == nil {
-			err, child = assignmentSmt(reader)
+			child, err = assignmentSmt(reader)
 			if err != nil {
-				return err, nil
+				return nil, err
 			}
 		}
 
 		if child == nil {
-			return fmt.Errorf("unknown statement"), nil
+			return nil, fmt.Errorf("unknown statement")
 		}
 
 		node.AddChild(child)
 	}
 
-	return nil, node
+	return node, nil
 }
 
-func assignmentSmt(reader *lexer.Lexer) (error, *ast.Node) {
+func assignmentSmt(reader *lexer.Lexer) (*ast.Node, error) {
 	token := reader.Peek()
 	if token.Kind == tokens.Identifier {
 		token = reader.Read()
@@ -54,12 +54,12 @@ func assignmentSmt(reader *lexer.Lexer) (error, *ast.Node) {
 		token = reader.Peek()
 		if token.Kind == tokens.Assignment {
 			reader.Read()
-			err, child := evl.Additive(reader)
+			child, err := evl.Additive(reader)
 			if err != nil {
-				return err, nil
+				return nil, err
 			}
 			if child == nil {
-				return fmt.Errorf("expect an expression after ="), nil
+				return nil, fmt.Errorf("expect an expression after =")
 			}
 			node.AddChild(child)
 
@@ -67,7 +67,7 @@ func assignmentSmt(reader *lexer.Lexer) (error, *ast.Node) {
 			if token.Kind == tokens.SemiColon {
 				reader.Read()
 			} else {
-				return fmt.Errorf("expect a semicolon at the end of line"), nil
+				return nil, fmt.Errorf("expect a semicolon at the end of line")
 			}
 		} else {
 			reader.Unread()
@@ -77,11 +77,11 @@ func assignmentSmt(reader *lexer.Lexer) (error, *ast.Node) {
 	return nil, nil
 }
 
-func expressionStmt(reader *lexer.Lexer) (error, *ast.Node) {
+func expressionStmt(reader *lexer.Lexer) (*ast.Node, error) {
 	pos := reader.Position()
-	err, node := evl.Additive(reader)
+	node, err := evl.Additive(reader)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	if node != nil {
@@ -94,10 +94,10 @@ func expressionStmt(reader *lexer.Lexer) (error, *ast.Node) {
 		}
 	}
 
-	return nil, node
+	return node, nil
 }
 
-func intDeclare(reader *lexer.Lexer) (error, *ast.Node) {
+func intDeclare(reader *lexer.Lexer) (*ast.Node, error) {
 	token := reader.Peek()
 	if token.Kind == tokens.Int {
 		token = reader.Read()
@@ -108,33 +108,33 @@ func intDeclare(reader *lexer.Lexer) (error, *ast.Node) {
 			token = reader.Peek()
 			if token.Kind == tokens.Assignment {
 				reader.Read()
-				err, child := evl.Additive(reader)
+				child, err := evl.Additive(reader)
 				if err != nil {
-					return err, nil
+					return nil, err
 				}
 
 				if child == nil {
-					return fmt.Errorf("expect an expression after ="), nil
+					return nil, fmt.Errorf("expect an expression after =")
 				}
 				node.AddChild(child)
 
 				token = reader.Peek()
 				if token.Kind == tokens.SemiColon {
 					reader.Read()
-					return nil, node
+					return node, nil
 				} else {
-					return fmt.Errorf("expect a semicolon at the end of line"), nil
+					return nil, fmt.Errorf("expect a semicolon at the end of line")
 				}
 			}
 
 			if token.Kind == tokens.SemiColon {
 				reader.Read()
-				return nil, node
+				return node, nil
 			} else {
-				return fmt.Errorf("expect a semicolon at the end of line"), nil
+				return nil, fmt.Errorf("expect a semicolon at the end of line")
 			}
 		} else {
-			return fmt.Errorf("expect an identifier after int"), nil
+			return nil, fmt.Errorf("expect an identifier after int")
 		}
 	}
 	return nil, nil
